@@ -1,0 +1,49 @@
+{
+  "name": "nanda-adapter-js",
+  "version": "1.0.0",
+  "description": "Node.js wrapper for NANDA Adapter - Bring your local agent to the global internet",
+  "main": "lib/index.js",
+  "types": "lib/types.d.ts",
+  "scripts": {
+    "test": "node examples/test.js",
+    "install": "node scripts/install-python-deps.js"
+  },
+  "keywords": [
+    "nanda",
+    "ai",
+    "agent",
+    "framework",
+    "anthropic",
+    "langchain",
+    "crewai"
+  ],
+  "author": "NANDA Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/projnanda/adapter.git"
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "cross-spawn": "^7.0.3",
+    "chalk": "^4.1.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "lib/**/*",
+    "python/**/*",
+    "examples/**/*",
+    "scripts/**/*"
+  ],
+  "homepage": "https://github.com/projnanda/adapter#readme",
+  "bugs": {
+    "url": "https://github.com/projnanda/adapter/issues"
+  }
+}
