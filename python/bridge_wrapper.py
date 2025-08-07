@@ -9,6 +9,7 @@ import json
 import traceback
 import threading
 import logging
+import signal
 
 # Add the parent nanda_adapter directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -160,6 +161,13 @@ class NodeJSBridge:
                     original_stdout = sys.stdout
                     sys.stdout = sys.stderr
                     
+                    # Patch signal handling to avoid "signal only works in main thread" error
+                    original_signal = signal.signal
+                    def dummy_signal(sig, handler):
+                        print(f"⚠️ Skipping signal handler setup for {sig} (running in thread)", file=sys.stderr, flush=True)
+                        return None
+                    signal.signal = dummy_signal
+                    
                     try:
                         self.nanda_instance.start_server_api(
                             anthropic_key=config['anthropic_key'],
@@ -175,7 +183,8 @@ class NodeJSBridge:
                             ssl=config.get('ssl', True)
                         )
                     finally:
-                        # Restore original stdout
+                        # Restore original signal and stdout
+                        signal.signal = original_signal
                         sys.stdout = original_stdout
                         
                 except Exception as e:
@@ -283,7 +292,7 @@ class NodeJSBridge:
             self.send_response({
                 'id': message_id,
                 'status': result['status'],
-                'result': result.get('message') or result,
+                'result': result,
                 'error': result.get('error')
             })
             
