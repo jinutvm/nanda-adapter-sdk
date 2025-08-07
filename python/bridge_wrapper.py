@@ -195,15 +195,12 @@ class NodeJSBridge:
             self.server_thread.start()
             self.running = True
             
-            # Generate enrollment link
-            agent_id = config.get('agent_id', 'default')
-            enrollment_link = f"https://chat.nanda-registry.com/landing.html?agentId={agent_id}"
+            # Note: agent_id generation and enrollment link creation is handled by NANDA core
             
             print("✅ API server thread started successfully", file=sys.stderr, flush=True)
             return {
                 'status': 'success', 
-                'message': 'API server started',
-                'enrollment_link': enrollment_link
+                'message': 'API server started'
             }
             
         except Exception as e:
