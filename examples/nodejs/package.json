@@ -1,0 +1,20 @@
+{
+  "name": "nanda-nodejs-examples",
+  "version": "1.0.0",
+  "description": "Node.js examples for NANDA Adapter",
+  "private": true,
+  "scripts": {
+    "basic": "node basic-example.js",
+    "pirate": "node pirate-agent.js",
+    "professional": "node professional-agent.js",
+    "test-all": "npm run basic && echo '\\n---\\n' && npm run pirate && echo '\\n---\\n' && npm run professional"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "@langchain/anthropic": "^0.3.0",
+    "@langchain/core": "^0.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
