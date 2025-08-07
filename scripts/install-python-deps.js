@@ -16,7 +16,7 @@ const REQUIREMENTS_FILE = path.join(__dirname, '..', 'requirements.txt');
 async function checkPython() {
     console.log(chalk.blue('🔍 Checking Python installation...'));
     
-    const pythonCommands = ['python3', 'python'];
+    const pythonCommands = ['python3.11'];
     
     for (const cmd of pythonCommands) {
         try {
