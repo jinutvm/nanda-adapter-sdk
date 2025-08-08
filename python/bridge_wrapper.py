@@ -10,6 +10,8 @@ import traceback
 import threading
 import logging
 import signal
+import subprocess
+import tempfile
 
 # Add the parent nanda_adapter directory to Python path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -71,34 +73,88 @@ class NodeJSBridge:
         })
     
     def register_improvement_logic(self, logic_data):
-        """Register JavaScript improvement logic"""
+        """Register JavaScript improvement logic for execution"""
         try:
             logic_name = logic_data.get('name', 'nodejs_custom')
+            logic_function_str = logic_data.get('function', '')
             
-            # Create a wrapper function that can call the JS logic
+            print(f"🔧 Storing JavaScript improvement function: {logic_name}", file=sys.stderr, flush=True)
+            
+            # Store the function string and metadata
+            self.js_function_str = logic_function_str
+            self.js_function_name = logic_name
+            
+            # Create a wrapper that executes the JavaScript function via Node.js
             def improvement_wrapper(message_text):
                 try:
-                    # For now, we'll use a simple text transformation
-                    # In a full implementation, this would evaluate the JS function
-                    # or use a JS engine like PyV8 or similar
+                    print(f"🏴‍☠️ Executing {logic_name} for: '{message_text}'", file=sys.stderr, flush=True)
                     
-                    # Simple fallback logic for demo
-                    if 'pirate' in logic_name.lower():
-                        return message_text.replace('hello', 'ahoy').replace('Hi', 'Ahoy')
-                    elif 'professional' in logic_name.lower():
-                        return f"Dear colleague, {message_text}. Best regards."
-                    else:
-                        # Default improvement
-                        return message_text.strip().capitalize()
+                    # Create temporary Node.js script to execute the improvement function
+                    js_wrapper = f'''
+const {{ ChatAnthropic }} = require('@langchain/anthropic');
+const {{ PromptTemplate }} = require('@langchain/core/prompts');
+const {{ StringOutputParser }} = require('@langchain/core/output_parsers');
+
+// The improvement function from the Node.js process
+const improvementFunction = {logic_function_str};
+
+// Execute the function
+(async () => {{
+    try {{
+        const messageText = process.argv[2];
+        const result = await improvementFunction(messageText);
+        console.log(result);
+    }} catch (error) {{
+        console.error('Error:', error.message);
+        // Return original message on error
+        console.log(process.argv[2]);
+    }}
+}})();
+'''
+                    
+                    # Write to temporary file
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as temp_file:
+                        temp_file.write(js_wrapper)
+                        temp_js_path = temp_file.name
+                    
+                    try:
+                        # Set up environment for Node.js execution
+                        env = os.environ.copy()
+                        env['NODE_PATH'] = f"{parent_dir}/node_modules:{env.get('NODE_PATH', '')}"
                         
+                        # Execute the JavaScript improvement function
+                        result = subprocess.run([
+                            'node', temp_js_path, message_text
+                        ], cwd=parent_dir, env=env, capture_output=True, text=True, timeout=30)
+                        
+                        if result.returncode == 0:
+                            improved_text = result.stdout.strip()
+                            if improved_text and improved_text != message_text:
+                                print(f"✅ JavaScript improvement result: '{improved_text}'", file=sys.stderr, flush=True)
+                                return improved_text
+                            else:
+                                print(f"⚠️ JavaScript returned same text or empty", file=sys.stderr, flush=True)
+                                return message_text
+                        else:
+                            print(f"❌ JavaScript execution failed: {result.stderr.strip()}", file=sys.stderr, flush=True)
+                            return message_text
+                            
+                    finally:
+                        # Clean up temp file
+                        try:
+                            os.unlink(temp_js_path)
+                        except:
+                            pass
+                    
                 except Exception as e:
-                    print(f"Error in improvement logic: {e}", file=sys.stderr)
+                    print(f"❌ Error executing JavaScript improvement: {e}", file=sys.stderr, flush=True)
                     return message_text
             
             self.improvement_logic = improvement_wrapper
-            return {'status': 'success', 'message': f'Registered improvement logic: {logic_name}'}
+            return {'status': 'success', 'message': f'JavaScript improvement logic ready: {logic_name}'}
             
         except Exception as e:
+            print(f"❌ Error registering improvement logic: {e}", file=sys.stderr, flush=True)
             return {'status': 'error', 'error': str(e)}
     
     def create_nanda_instance(self):
