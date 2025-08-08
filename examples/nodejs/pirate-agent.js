@@ -6,49 +6,60 @@
  */
 
 const { NANDA } = require('../../lib/index');
-const { ChatAnthropic } = require('@langchain/anthropic');
-const { PromptTemplate } = require('@langchain/core/prompts');
-const { StringOutputParser } = require('@langchain/core/output_parsers');
 require('dotenv').config();
 
 function createLangChainPirateImprovement() {
-    // Initialize LangChain components
-    const llm = new ChatAnthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
-        model: 'claude-3-haiku-20240307',
-        temperature: 0.7
-    });
-    
-    const piratePrompt = PromptTemplate.fromTemplate(`
-Transform the following message into pirate speak while keeping the core meaning intact. Use pirate vocabulary, grammar, and expressions. Be creative but authentic to pirate language.
+    return async function langchainPirateImprovement(messageText) {
+        try {
+            // Create the chain inside the function to avoid scoping issues
+            const { ChatAnthropic } = require('@langchain/anthropic');
+            const { PromptTemplate } = require('@langchain/core/prompts');
+            const { StringOutputParser } = require('@langchain/core/output_parsers');
+            
+            const llm = new ChatAnthropic({
+                apiKey: process.env.ANTHROPIC_API_KEY,
+                model: 'claude-3-haiku-20240307',
+                temperature: 0.7
+            });
 
-Examples of transformations:
+            const piratePrompt = PromptTemplate.fromTemplate(`
+Transform the following message into authentic pirate English while preserving the original meaning:
+
+Pirate transformations:
 - "hello" → "ahoy"
-- "friend" → "matey" 
-- "you" → "ye"
+- "friend" → "matey"
+- "you" → "ye" 
 - "yes" → "aye"
+- "no" → "nay"
 - "money" → "doubloons"
 - "bathroom" → "head"
 - "kitchen" → "galley"
+- "boat" → "ship"
 
-Add pirate expressions like "Arrr!", "Shiver me timbers!", "Avast ye!" when appropriate.
+Add pirate expressions like "Arrr!", "Shiver me timbers!", "Avast ye!" when fitting.
 
-Original message: {message}
+Original: {message}
+Pirate English:`);
 
-Pirate version:`);
-    
-    // Create the chain
-    const chain = piratePrompt.pipe(llm).pipe(new StringOutputParser());
-    
-    // Return the improvement function
-    return async function langchainPirateImprovement(messageText) {
-        console.log('🤖 Using LangChain to transform message to pirate speak...');
-        
-        const pirateMessage = await chain.invoke({
-            message: messageText
-        });
-        
-        return pirateMessage.trim();
+            const chain = piratePrompt.pipe(llm).pipe(new StringOutputParser());
+            
+            // Add timeout wrapper
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('LLM call timeout after 10 seconds')), 10000);
+            });
+            
+            const llmPromise = chain.invoke({ message: messageText });
+            
+            const pirateMessage = await Promise.race([llmPromise, timeoutPromise]);
+            
+            if (!pirateMessage || pirateMessage.trim() === '') {
+                return messageText;
+            }
+            
+            return pirateMessage.trim();
+        } catch (error) {
+            return messageText; // Fallback to original
+        }
     };
 }
 

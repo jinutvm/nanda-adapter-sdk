@@ -11,7 +11,7 @@ const path = require('path');
 const chalk = require('chalk');
 
 const PYTHON_DIR = path.join(__dirname, '..', 'python');
-const REQUIREMENTS_FILE = path.join(__dirname, '..', 'requirements.txt');
+const REQUIREMENTS_FILE = path.join(PYTHON_DIR, 'requirements.txt');
 
 async function checkPython() {
     console.log(chalk.blue('🔍 Checking Python installation...'));
@@ -95,10 +95,7 @@ async function copyPythonSource() {
         // Copy nanda_adapter directory
         copyDirectoryRecursive(sourceDir, targetDir);
         
-        // Copy requirements.txt if it exists
-        if (fs.existsSync(REQUIREMENTS_FILE)) {
-            fs.copyFileSync(REQUIREMENTS_FILE, path.join(PYTHON_DIR, 'requirements.txt'));
-        }
+        // requirements.txt is already in python directory, no need to copy
         
         console.log(chalk.green('✅ Python source files copied successfully'));
     } catch (error) {

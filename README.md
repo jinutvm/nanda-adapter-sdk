@@ -1,319 +1,631 @@
-# NANDA Adapter
-Bring your local agent. Make it **persistent**, **discoverable** and **interoperable** on the global internet with NANDA.
+# NANDA Adapter - Node.js Wrapper
 
-Help us build an Open and Vibrant Internet of Agents
+Bring your local Node.js agent to the **persistent**, **discoverable** and **interoperable** global internet of agents with NANDA.
+
+Build custom improvement logic using JavaScript/TypeScript with LangChain, custom functions, or any AI framework.
 
 ## Features
 
-- **Multiple AI Frameworks**: Support for LangChain, CrewAI, and any custom logic.
-- **Multi-protocol Communication**: Built-in protocol that allows universal communication
-- **Global Index**: Automatic agent discovery via MIT NANDA Index
+- **JavaScript/TypeScript Support**: Write improvement logic in familiar Node.js environment
+- **LangChain Integration**: Built-in support for LangChain ChatAnthropic and other providers
+- **Custom Logic**: Simple function-based improvement or complex AI workflows  
+- **Multi-protocol Communication**: Universal agent-to-agent communication
+- **Global Discovery**: Automatic agent registration in MIT NANDA Index
 - **SSL Support**: Production-ready with Let's Encrypt certificates
-
-  
-<img width="768" height="457" alt="Screenshot 2025-07-15 at 8 41 36 PM" src="https://github.com/user-attachments/assets/f23e32dd-ddda-43a5-a405-03ad4e9dbc5a" />
+- **Python Bridge**: Seamless integration with NANDA's Python core
 
 ## Installation
 
-### Basic Installation
+### Prerequisites
+
+**Required:**
+- **Node.js 16+** (recommended: Node.js 18+)
+- **Python 3.11** (required for NANDA core)
+
+**Optional:**
+- **LangChain packages** (if using AI-powered improvements)
+- **Domain name** (for production SSL setup)
+
+### Install Package
 
 ```bash
-pip install nanda-adapter
+npm install nanda-adapter-js
 ```
 
-## Steps to create a test example using this repo
+The install script automatically:
+- Checks for Python 3.11 installation
+- Installs Python dependencies from `python/requirements.txt`
+- Sets up the Python bridge
 
-### 1. Clone this repository
+## How to Create Your Pirate Agent
 
-> git clone github.com/projnanda/adapter
+This example shows how to create a LangChain-powered pirate agent that transforms messages into pirate English.
 
-### 2. Setup dependencies
-> cd nanda_agent/examples
+### 1. Create package.json
 
-> pip install -r requirements.txt
-
-### 3. Configure your Domain and SSL Certificates (move certificates into current path)
-
-> sudo certbot certonly --standalone -d <YOUR_DOMAIN_NAME.COM>
-
-> sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME.COM>/fullchain.pem .
-
-> sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME.COM>/privkey.pem .
-
-> sudo chown $USER:$USER fullchain.pem privkey.pem
-
-> chmod 600 fullchain.pem privkey.pem`
-
-### 4. Set Your enviroment variables ANTHROPIC_API_KEY (For running your personal hosted agents, need API key and your own domain)
-
-> export ANTHROPIC_API_KEY="your-api-key-here
-
-> export DOMAIN_NAME="<YOUR_DOMAIN_NAME.COM>
-
-### 5. Run an example agent (langchain_pirate.py)
-> nohup python3 langchain_pirate.py > out.log 2>&1 &
-
-### 6. Get your enrollment link from Log File
-> cat out.log
-
-
-## Examples for How to create your own agent
-You can create an agent using your custom ReACT framework or any agent package like LangChain, CrewAI etc.
-
-Then, you can deploy to internet of Agents using one line of code via NANDA.
-
-### 1. Custom Agent
-
-```bash
-2.1 Write your improvement logic using the framework you like. Here it is a simple moduule without any llm call.
-2.4 Move this file into your server(the domain should match to the IP address) and run this python file in background 
+```json
+{
+  "name": "pirate-agent",
+  "version": "1.0.0",
+  "description": "LangChain-powered Pirate Agent using NANDA",
+  "main": "pirate-agent.js",
+  "scripts": {
+    "start": "node pirate-agent.js",
+    "dev": "DEBUG=true node pirate-agent.js"
+  },
+  "dependencies": {
+    "nanda-adapter-js": "^1.0.0",
+    "@langchain/anthropic": "^0.2.0",
+    "@langchain/core": "^0.2.0",
+    "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
 ```
 
-```python
-#!/usr/bin/env python3
-from nanda_adapter import NANDA
-import os
+### 2. Create pirate-agent.js
 
-def create_custom_improvement():
-    """Create your custom improvement function"""
-    
-    def custom_improvement_logic(message_text: str) -> str:
-        """Transform messages according to your logic"""
-        try:
-            # Your custom transformation logic here
-            improved_text = message_text.replace("hello", "greetings")
-            improved_text = improved_text.replace("goodbye", "farewell")
+```javascript
+#!/usr/bin/env node
+/**
+ * Pirate Agent - Transforms messages to pirate English using LangChain
+ */
+const { NANDA } = require('nanda-adapter-js');
+require('dotenv').config();
+
+function createPirateImprovement() {
+    return async function(messageText) {
+        try {
+            // Import LangChain inside function to avoid scoping issues
+            const { ChatAnthropic } = require('@langchain/anthropic');
+            const { PromptTemplate } = require('@langchain/core/prompts');
+            const { StringOutputParser } = require('@langchain/core/output_parsers');
             
-            return improved_text
-        except Exception as e:
-            print(f"Error in improvement: {e}")
-            return message_text  # Fallback to original
-    
-    return custom_improvement_logic
+            const llm = new ChatAnthropic({
+                apiKey: process.env.ANTHROPIC_API_KEY,
+                model: 'claude-3-haiku-20240307',
+                temperature: 0.7
+            });
 
-def main():
-    # Create your improvement function
-    my_improvement = create_custom_improvement()
-    
-    # Initialize NANDA with your custom logic
-    nanda = NANDA(my_improvement)
-    
-    # Start the server
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-    domain = os.getenv("DOMAIN_NAME")
-    
-    nanda.start_server_api(anthropic_key, domain)
+            const piratePrompt = PromptTemplate.fromTemplate(`
+Transform the following message into authentic pirate English:
 
-if __name__ == "__main__":
-    main()
+Pirate transformations:
+- "hello" → "ahoy"
+- "friend" → "matey" 
+- "you" → "ye"
+- "yes" → "aye"
+
+Add pirate expressions like "Arrr!", "Shiver me timbers!" when fitting.
+
+Original: {message}
+Pirate English:`);
+
+            const chain = piratePrompt.pipe(llm).pipe(new StringOutputParser());
+            
+            // Add timeout protection
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Timeout')), 10000);
+            });
+            
+            const llmPromise = chain.invoke({ message: messageText });
+            const pirateMessage = await Promise.race([llmPromise, timeoutPromise]);
+            
+            return pirateMessage.trim() || messageText;
+        } catch (error) {
+            return messageText; // Fallback to original
+        }
+    };
+}
+
+async function main() {
+    console.log('🏴‍☠️ Starting Pirate Agent...');
+
+    if (!process.env.ANTHROPIC_API_KEY || !process.env.DOMAIN_NAME) {
+        console.error('❌ ANTHROPIC_API_KEY and DOMAIN_NAME are required');
+        process.exit(1);
+    }
+
+    const nanda = new NANDA(createPirateImprovement(), {
+        debug: process.env.DEBUG === 'true'
+    });
+
+    const result = await nanda.startServerAPI({
+        anthropicKey: process.env.ANTHROPIC_API_KEY,
+        domain: process.env.DOMAIN_NAME,
+        ssl: true,
+        cert: './certs/fullchain.pem',
+        key: './certs/privkey.pem'
+    });
+
+    console.log('✅ Pirate Agent is sailing! 🏴‍☠️');
+    console.log('🔗 Enrollment link:', result.enrollment_link);
+}
+
+main();
 ```
 
-### Deploy a LangChain Agent
-
-```python
-from nanda_adapter import NANDA
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_anthropic import ChatAnthropic
-
-def create_langchain_improvement():
-    llm = ChatAnthropic(
-        api_key=os.getenv("ANTHROPIC_API_KEY"),
-        model="claude-3-haiku-20240307"
-    )
-    
-    prompt = PromptTemplate(
-        input_variables=["message"],
-        template="Make this message more professional: {message}"
-    )
-    
-    chain = prompt | llm | StrOutputParser()
-    
-    def langchain_improvement(message_text: str) -> str:
-        return chain.invoke({"message": message_text})
-    
-    return langchain_improvement
-
-# Use it
-nanda = NANDA(create_langchain_improvement())
-# Start the server
-anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-domain = os.getenv("DOMAIN_NAME")
-
-nanda.start_server_api(anthropic_key, domain)
-```
-
-### Deploy a CrewAI Agent
-
-```python
-from nanda_adapter import NANDA
-from crewai import Agent, Task, Crew
-from langchain_anthropic import ChatAnthropic
-
-def create_crewai_improvement():
-    llm = ChatAnthropic(
-        api_key=os.getenv("ANTHROPIC_API_KEY"),
-        model="claude-3-haiku-20240307"
-    )
-    
-    improvement_agent = Agent(
-        role="Message Improver",
-        goal="Improve message clarity and professionalism",
-        backstory="You are an expert communicator.",
-        llm=llm
-    )
-    
-    def crewai_improvement(message_text: str) -> str:
-        task = Task(
-            description=f"Improve this message: {message_text}",
-            agent=improvement_agent,
-            expected_output="An improved version of the message"
-        )
-        
-        crew = Crew(agents=[improvement_agent], tasks=[task])
-        result = crew.kickoff()
-        return str(result)
-    
-    return crewai_improvement
-
-# Use it
-nanda = NANDA(create_crewai_improvement())
-# Start the server
-anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-domain = os.getenv("DOMAIN_NAME")
-
-nanda.start_server_api(anthropic_key, domain)
-```
-
-## Deploy from Scratch on a barebones machine (Ubuntu on Linode or Amazon Linux on EC2)
+### 3. Create .env file
 
 ```bash
-Assuming your customized improvement logic is in langchain_pirate.py
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+DOMAIN_NAME=yourdomain.com
+DEBUG=true
+```
 
-2. ssh into the server, ensure the latest software is in the system
-Ubuntu Command : ssh root@<IP>
-      sudo apt update  && sudo apt install python3 python3-pip python3-venv certbot
+## Deploy Pirate Agent from Scratch
 
-EC2 cmd : ssh -i <YOUR_PEM_KEY> ec2-user@<IP>
-      sudo dnf update -y && sudo dnf install -y python3.11 python3.11-pip certbot
+### Step 1: SSH to Server
 
-3. Move to the respective folder and create and Activate a virtual env in the folder where files are moved in step 1
-cmd : cd /opt/test-agents && python3 -m venv <YOUR_ENV_NAME> && source <YOUR_ENV_NAME>/bin/activate
+**Ubuntu/Debian:**
+```bash
+ssh root@<YOUR_SERVER_IP>
+```
 
-EC2 cmd: cd /home/ec2-user/test-agents && python3.11 -m venv <YOUR_ENV_NAME> && source <YOUR_ENV_NAME>/bin/activate
+**Amazon Linux/EC2:**
+```bash
+ssh -i <YOUR_PEM_KEY> ec2-user@<YOUR_SERVER_IP>
+```
 
-4. Generate SSL certificates on this machine for your domain.
-(For ex: You should ensure in  DNS an A record is mapping this domain <DOMAIN_NAME> to IP address <YOUR_IP>). Ensure the domain has to be changed
-   
-cmd : sudo certbot certonly --standalone -d <YOUR_DOMAIN_NAME> 
+### Step 2: Install All Dependencies
 
-5. Move certificates to current folder for access and provide required access
-Ensure the domain has to be changed
+**Ubuntu/Debian:**
+```bash
+sudo apt update && sudo apt upgrade -y && sudo apt install -y curl wget python3.11 python3.11-pip python3.11-venv certbot && curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash - && sudo apt install -y nodejs && sudo dnf install -y gcc-c++ make
+```
 
-    sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/fullchain.pem .
-    sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/privkey.pem .
-    sudo chown $USER:$USER fullchain.pem privkey.pem
-    chmod 600 fullchain.pem privkey.pem
+**Amazon Linux/EC2:**
+```bash
+sudo dnf update -y && sudo dnf install -y python3.11 python3.11-pip certbot && curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash - && sudo dnf install -y nodejs
+```
 
-6. Install the requirements file 
-cmd : python -m pip install --upgrade pip && pip3 install -r requirements.txt 
+### Step 3: Generate SSL Certificates
 
-7. Ensure the env variables are available either through .env or you can provide export 
-cmd : export ANTHROPIC_API_KEY=my-anthropic-key && export DOMAIN_NAME=my-domain
+```bash
+sudo certbot certonly --standalone -d <YOUR_DOMAIN_NAME>
+```
 
-8. Run the new improvement logic as a batch process 
-cmd : nohup python3 langchain_pirate.py > out.log 2>&1 &
+### Step 4: Setup Project Directory
 
-9. Open the log file and you could find the agent enrollment link
-cmd : cat out.log
+```bash
+mkdir -p /home/user/pirate-agent && cd /home/user/pirate-agent && sudo chown -R ec2-user:ec2-user /home/ec2-user/pirate-agent
+```
 
-10. Take the link and go to browser for registration
+### Step 5: Copy SSL Certificates
+
+```bash
+mkdir -p certs && sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/fullchain.pem certs/ && sudo cp -L /etc/letsencrypt/live/<YOUR_DOMAIN_NAME>/privkey.pem certs/ && sudo chown $USER:$USER certs/*.pem && chmod 600 certs/*.pem
+```
+
+### Step 6: Create Project Files
+
+Copy the 3 files from the "How to Create Your Pirate Agent" section above:
+- `package.json` 
+- `pirate-agent.js`
+- `.env` (with your actual API key and domain)
+
+```bash
+
+scp -i <YOUR_PEM_KEY>  <improvement_agent.js> <package.json> <.env(file with anthropic key and domain)> \
+  ec2-user@<YOUR_SERVER_IP>:<path created in step4>
+
 
 ```
 
-The framework will automatically:
-- Generate SSL certificates using Let's Encrypt
-- Set up proper agent registration
-- Configure production-ready logging
+### Step 7: Install Dependencies and Run
 
+```bash
+npm install 
+nohup npm start > pirate-agent.log 2>&1 &
+```
 
-## Appendix: Configuration Details
+### Step 8: Open the log file to get the personal link for signup. 
+
+```bash
+cat pirate-agent.log
+```
+
+## API Reference
+
+### NANDA Class
+
+```javascript
+#!/usr/bin/env node
+/**
+ * My Custom NANDA Agent
+ */
+const { NANDA } = require('nanda-adapter-js');
+require('dotenv').config();
+
+function createMyImprovement() {
+    return async function(messageText) {
+        try {
+            // Your custom improvement logic here
+            // This is just an example - replace with your logic
+            let improved = messageText
+                .replace(/hello/gi, 'greetings')
+                .replace(/hi/gi, 'salutations');
+            
+            // Make it more formal
+            if (improved.length > 0) {
+                improved = improved.charAt(0).toUpperCase() + improved.slice(1);
+                if (!improved.endsWith('.')) {
+                    improved += '.';
+                }
+            }
+            
+            return improved;
+        } catch (error) {
+            console.error('Error in improvement logic:', error);
+            return messageText; // Fallback to original
+        }
+    };
+}
+
+async function main() {
+    console.log('🚀 Starting My NANDA Agent...');
+
+    // Validate environment variables
+    if (!process.env.ANTHROPIC_API_KEY) {
+        console.error('❌ ANTHROPIC_API_KEY is required');
+        console.log('💡 Get your API key from: https://console.anthropic.com/');
+        process.exit(1);
+    }
+
+    if (!process.env.DOMAIN_NAME) {
+        console.error('❌ DOMAIN_NAME is required for production deployment');
+        console.log('💡 Set your domain: export DOMAIN_NAME="yourdomain.com"');
+        process.exit(1);
+    }
+
+    try {
+        // Create NANDA instance with your improvement logic
+        const nanda = new NANDA(createMyImprovement(), {
+            debug: process.env.DEBUG === 'true'
+        });
+
+        // Start the API server
+        console.log('🌐 Starting API server...');
+        const result = await nanda.startServerAPI({
+            anthropicKey: process.env.ANTHROPIC_API_KEY,
+            domain: process.env.DOMAIN_NAME,
+            port: parseInt(process.env.PORT) || 6000,
+            apiPort: parseInt(process.env.API_PORT) || 6001,
+            ssl: true,
+            cert: '/home/user/certs/fullchain.pem',
+            key: '/home/user/certs/privkey.pem'
+        });
+
+        console.log('✅ My Agent is now running!');
+        console.log('🔗 Enrollment link:', result.enrollment_link);
+        console.log('\nPress Ctrl+C to stop the server');
+
+        // Graceful shutdown handlers
+        const shutdown = async () => {
+            console.log('\n🛑 Shutting down agent...');
+            await nanda.stop();
+            console.log('👋 Agent stopped successfully!');
+            process.exit(0);
+        };
+
+        process.on('SIGINT', shutdown);
+        process.on('SIGTERM', shutdown);
+
+    } catch (error) {
+        console.error('❌ Failed to start agent:', error.message);
+        process.exit(1);
+    }
+}
+
+// Error handling
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (error) => {
+    console.error('❌ Unhandled Rejection:', error);
+    process.exit(1);
+});
+
+// Start the agent
+if (require.main === module) {
+    main();
+}
+```
+
+### Step 5: Create Environment File
+
+```bash
+# Create .env file with your configuration
+cat << 'EOF' > .env
+# Required: Your Anthropic API key
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+
+# Required: Your domain name (must match SSL certificate)
+DOMAIN_NAME=yourdomain.com
+
+# Optional: Enable debug logging
+DEBUG=true
+
+# Optional: Custom ports
+PORT=6000
+API_PORT=6001
+
+# Optional: Python path (if not in default location)
+PYTHON_PATH=/usr/bin/python3.11
+EOF
+
+# Set secure permissions
+chmod 600 .env
+```
+
+### Step 6: Run Your Agent
+
+```bash
+# Make agent script executable
+chmod +x agent.js
+
+# Test run (foreground)
+node agent.js
+
+# Production run (background with logs)
+nohup node agent.js > agent.log 2>&1 &
+
+# Check logs for enrollment link
+tail -f agent.log
+
+# Check if running
+ps aux | grep agent.js
+```
+
+## Example Improvement Logic Patterns
+
+### Basic Agent
+
+```javascript
+const { NANDA } = require('nanda-adapter-js');
+
+function createBasicImprovement() {
+    return function(messageText) {
+        return messageText
+            .replace(/hello/gi, 'greetings')
+            .replace(/goodbye/gi, 'farewell')
+            .charAt(0).toUpperCase() + messageText.slice(1);
+    };
+}
+
+const nanda = new NANDA(createBasicImprovement());
+```
+
+### Pirate Agent with LangChain
+
+```javascript
+const { NANDA } = require('nanda-adapter-js');
+const { ChatAnthropic } = require('@langchain/anthropic');
+const { PromptTemplate } = require('@langchain/core/prompts');
+const { StringOutputParser } = require('@langchain/core/output_parsers');
+
+function createLangChainPirateImprovement() {
+    const llm = new ChatAnthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
+        model: 'claude-3-haiku-20240307'
+    });
+    
+    const piratePrompt = PromptTemplate.fromTemplate(`
+Transform the following message into pirate speak while keeping the core meaning intact.
+Original message: {message}
+Pirate version:`);
+    
+    const chain = piratePrompt.pipe(llm).pipe(new StringOutputParser());
+    
+    return async function(messageText) {
+        return await chain.invoke({ message: messageText });
+    };
+}
+
+const nanda = new NANDA(createLangChainPirateImprovement());
+```
+
+### Professional Agent
+
+```javascript
+const { NANDA, createTextTransformImprovement } = require('nanda-adapter-js');
+
+const professionalAgent = new NANDA(
+    createTextTransformImprovement((message) => {
+        return `I hope this message finds you well. ${message} Please let me know if you have any questions.`;
+    })
+);
+```
+
+### With External API
+
+```javascript
+const { NANDA } = require('nanda-adapter-js');
+const axios = require('axios');
+
+function createAPIImprovement() {
+    return async function(messageText) {
+        try {
+            const response = await axios.post('https://api.example.com/improve', {
+                message: messageText
+            });
+            return response.data.improved;
+        } catch (error) {
+            console.error('API error:', error);
+            return messageText; // Fallback to original
+        }
+    };
+}
+
+const nanda = new NANDA(createAPIImprovement());
+```
+
+## 🚀 Production Deployment
+
+### 1. Set Environment Variables
+
+```bash
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+export DOMAIN_NAME="your-domain.com"
+```
+
+### 2. SSL Certificate Setup
+
+```bash
+# Generate Let's Encrypt certificates
+sudo certbot certonly --standalone -d your-domain.com
+
+# Copy certificates to project directory
+sudo cp -L /etc/letsencrypt/live/your-domain.com/fullchain.pem .
+sudo cp -L /etc/letsencrypt/live/your-domain.com/privkey.pem .
+sudo chown $USER:$USER fullchain.pem privkey.pem
+chmod 600 fullchain.pem privkey.pem
+```
+
+### 3. Run Agent
+
+```javascript
+// production-agent.js
+const { NANDA } = require('nanda-adapter-js');
+
+const nanda = new NANDA(yourImprovementLogic);
+
+nanda.startServerAPI({
+    anthropicKey: process.env.ANTHROPIC_API_KEY,
+    domain: process.env.DOMAIN_NAME,
+    ssl: true
+}).then(result => {
+    console.log('🚀 Agent running!');
+    console.log('Enrollment link:', result.enrollment_link);
+});
+```
+
+```bash
+# Run in production
+node production-agent.js
+
+# Or with PM2
+pm2 start production-agent.js --name "nanda-agent"
+```
+
+## 🛠️ Development
+
+### Running Examples
+
+```bash
+# Clone the repository
+git clone https://github.com/projnanda/adapter.git
+cd adapter
+git checkout nodejs_wrapper
+
+# Install dependencies
+npm install
+
+# Run examples
+cd examples/nodejs
+npm install
+
+# Basic example
+npm run basic
+
+# Pirate agent (with environment variables)
+export ANTHROPIC_API_KEY="your-key"
+npm run pirate
+
+# Professional agent
+npm run professional
+```
 
 ### Environment Variables
-You need the following environment details ()
 
-- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
-- `DOMAIN_NAME`: Domain name for SSL certificates (required)
-- `AGENT_ID`: Custom agent ID (optional, auto-generated if not provided)
-- `PORT`: Agent bridge port (optional, default: 6000)
-- `IMPROVE_MESSAGES`: Enable/disable message improvement (optional, default: true)
-
-### Production Deployment
-
-For production deployment with SSL:
+Create a `.env` file in `examples/nodejs/`:
 
 ```bash
-export ANTHROPIC_API_KEY="your-api-key"
-export DOMAIN_NAME="your-domain.com"
-nanda-pirate
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
+DOMAIN_NAME=your-domain.com
+DEBUG=true
 ```
 
-### API Endpoints
+## 🔍 Troubleshooting
 
-When running with `start_server_api()`, the following endpoints are available:
+### Python Dependencies
 
-- `GET /api/health` - Health check
-- `POST /api/send` - Send message to agent
-- `GET /api/agents/list` - List registered agents
-- `POST /api/receive_message` - Receive message from agent
-- `GET /api/render` - Get latest message
-
-### Agent Communication
-
-Agents can communicate with each other using the `@agent_id` syntax:
-
-```
-@agent123 Hello there!
-```
-
-The message will be improved using your custom logic before being sent.
-
-### Command Line Tools
+If you encounter Python-related errors:
 
 ```bash
-# Show help
-nanda-adapter --help
+# Install Python dependencies manually
+python3 -m pip install -r requirements.txt
 
-# List available examples
-nanda-adapter --list-examples
-
-# Run specific examples
-nanda-pirate              # Simple pirate agent
-nanda-pirate-langchain    # LangChain pirate agent
-nanda-sarcastic           # CrewAI sarcastic agent
+# Or use the install script
+node scripts/install-python-deps.js
 ```
 
-### Architecture
+### Common Issues
 
-The NANDA framework consists of:
+**"Python not found"**
+- Install Python 3.8 or higher
+- Set `pythonPath` option to correct Python executable
 
-1. **AgentBridge**: Core communication handler
-2. **Message Improvement System**: Pluggable improvement logic
-3. **Registry System**: Agent discovery and registration
-4. **A2A Communication**: Agent-to-agent messaging
-5. **Flask API**: External communication interface
+**"ANTHROPIC_API_KEY required"**
+- Sign up at https://console.anthropic.com/
+- Set the environment variable or pass in config
 
-### Support
+**"SSL certificate not found"**
+- Generate certificates with Let's Encrypt
+- Ensure certificate files are in the correct location
+- Set proper file permissions
 
-For issues and questions:
-- GitHub Issues: https://github.com/nanda-ai/nanda-adapter/issues
-  
-## Changelog
+**"Port already in use"**
+- Change port in configuration
+- Kill existing processes: `sudo lsof -ti:6000 | xargs kill -9`
 
-### v1.0.0
-- Initial release
-- Basic NANDA framework
-- LangChain integration
-- CrewAI integration
-- Example agents
-- Production deployment support
+### Debug Mode
+
+Enable debug logging to troubleshoot issues:
+
+```javascript
+const nanda = new NANDA(improvementLogic, { debug: true });
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make changes and test
+4. Submit a pull request
+
+## 📝 License
+
+MIT License - see LICENSE file for details.
+
+## 🔗 Links
+
+- [Python NANDA Adapter](../README.md)
+- [GitHub Repository](https://github.com/projnanda/adapter)
+- [NANDA Registry](https://chat.nanda-registry.com)
+- [Documentation](https://docs.nanda.ai)
+
+## 🎯 Architecture
+
+The Node.js wrapper uses the following architecture:
+
+```
+┌─────────────────┐    JSON/IPC    ┌─────────────────┐
+│   Node.js App   │ ───────────► │  Python Bridge  │
+│                 │              │                 │
+│ - NANDA Class   │              │ - bridge.py     │
+│ - Improvement   │              │ - NANDA Core    │
+│ - API Wrapper   │              │ - AgentBridge   │
+└─────────────────┘              └─────────────────┘
+```
+
+This approach provides:
+- ✅ Node.js developer experience
+- ✅ Python core stability  
+- ✅ Full feature compatibility
+- ✅ Easy installation via npm
+- ✅ TypeScript support
