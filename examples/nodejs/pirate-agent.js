@@ -98,7 +98,11 @@ async function main() {
                 agentId: 'langchain_pirate_agent',
                 port: 6000,
                 apiPort: 6001,
-                ssl: true
+                ssl: true,
+                // Optional: Specify custom certificate paths
+                // cert: '/home/user/certs/fullchain.pem',
+                // key: '/home/user/certs/privkey.pem'
+                // If not specified, defaults to Let's Encrypt paths for the domain
             });
             
             console.log('✅ Pirate agent server started!');
