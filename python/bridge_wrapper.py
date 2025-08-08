@@ -118,14 +118,27 @@ const improvementFunction = {logic_function_str};
                         temp_js_path = temp_file.name
                     
                     try:
+                        # Find the actual working directory where node_modules exists
+                        # This should be where the user is running their Node.js app
+                        working_dir = os.getcwd()
+                        
                         # Set up environment for Node.js execution
                         env = os.environ.copy()
-                        env['NODE_PATH'] = f"{parent_dir}/node_modules:{env.get('NODE_PATH', '')}"
+                        # Add multiple possible node_modules paths
+                        node_paths = [
+                            f"{working_dir}/node_modules",
+                            f"{parent_dir}/node_modules",
+                            f"{parent_dir}/../node_modules"
+                        ]
+                        env['NODE_PATH'] = ':'.join(node_paths) + ':' + env.get('NODE_PATH', '')
+                        
+                        print(f"🔧 Executing Node.js in: {working_dir}", file=sys.stderr, flush=True)
+                        print(f"🔧 NODE_PATH: {env['NODE_PATH']}", file=sys.stderr, flush=True)
                         
                         # Execute the JavaScript improvement function
                         result = subprocess.run([
                             'node', temp_js_path, message_text
-                        ], cwd=parent_dir, env=env, capture_output=True, text=True, timeout=30)
+                        ], cwd=working_dir, env=env, capture_output=True, text=True, timeout=30)
                         
                         if result.returncode == 0:
                             improved_text = result.stdout.strip()
